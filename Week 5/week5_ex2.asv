@@ -1,8 +1,8 @@
 clear all;
 % Setting some of the parameters required for the script
-N=4096;
+N=1028;
 qam_order=64;
-L=512;
+L=300;
 fs=16000;
 
 random_length=(N/2)-1;
@@ -28,11 +28,11 @@ sig_rec=simout.signals.values;
 % Make sure the definition of the pulse given below corresponds exactly to
 % the description inside initparams.m
 pulse_duration=0.5; 
-samples_pulse=(pulse_duration*fs);
-pulse=ones(samples_pulse,1);
-pulse(1)=0;
-pulse(end)=0;
+t=0:1/fs:(0.5-(1/fs));
+pulse=0.8*sin(2*pi*4e3*t);
+pulse=pulse.';
 out_aligned=alignIO(sig_rec,pulse);
+out_aligned=
 trainMode='y';
 % Make out_aligned the same length as original OFDM stream else BER will
 % flag an error
@@ -41,7 +41,22 @@ out_aligned=out_aligned(1:length(ofdmStream_trainBlock));
 rxBitStream = qam_demod(rxOfdmStream,qam_order);
 berTransmission = ber(random_bit_vector,rxBitStream);
 plot(20*log10(abs(h_freq_estimated)),'o'); hold on;
-frpintf('\nThe number of samples passed to Simulink model for playing: %d',
+fprintf('\nThe number of samples passed to Simulink model for playing: %d',length(simin(:,1)));
+fprintf('\nNumber of samples received back from recplay module is %d',length(sig_rec));
+% lets see how the channel response was from the channel model estimated
+% previously
+load('h_channel','h');
+h_channel=h;
+h_channel_freq=fft(h_channel,N);
+h_channel_freq_dB=20*log10(abs(h_channel_freq));
+figure;
+plot(h_channel_freq_dB,'g');
+hold on;
+plot(20*log10(abs(h_freq_estimated)),'r');
+legend('Channel response from IR2','Channel response using trainblock');
+
+
+
 
 
 

@@ -36,13 +36,15 @@ recovered_qam_stream=zeros(data_size+dummy_elements,1);
 % Estimating the channel response using least squares fitting approach
 K=(N/2)-1;
 h_estimated=zeros((N/2)-1,1);
+%square_sum=
 if (trainMode=='y')
     disp('Demodulator in train mode');
     for j=2:K+1
         ofdm_frame_same_frequency=ofdm_frames_demodulated(j,:);
         %I know the expected symbol because the same symbol is transmited in
         %the same fame. It is present in the vector trainblock.
-        h_estimated(j-1)=sum(ofdm_frame_same_frequency)/(100*trainblock(j-1));
+        h_estimated(j-1)=trainblock(j-1)*ones(100,1)\ofdm_frame_same_frequency.';
+        %h_estimated(j-1)=trainblock(j-1)*sum(ofdm_frame_same_frequency)/
     end
     h_channel_freq=ones(N,1);
     h_channel_freq(1)=1e-8; %assign some value to the DC component of the channel response.

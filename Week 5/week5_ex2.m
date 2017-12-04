@@ -1,8 +1,8 @@
 clear all;
 % Setting some of the parameters required for the script
-N=4096;
-qam_order=64;
-L=512;
+N=1024;
+qam_order=4;
+L=300;
 fs=16000;
 
 random_length=(N/2)-1;
@@ -28,15 +28,15 @@ sig_rec=simout.signals.values;
 % Make sure the definition of the pulse given below corresponds exactly to
 % the description inside initparams.m
 pulse_duration=0.5; 
-samples_pulse=(pulse_duration*fs);
-pulse=ones(samples_pulse,1);
-pulse(1)=0;
-pulse(end)=0;
+t=0:1/fs:(0.5-(1/fs));
+pulse=0.8*sin(2*pi*4e3*t);
+pulse=pulse.';
 out_aligned=alignIO(sig_rec,pulse);
 trainMode='y';
 % Make out_aligned the same length as original OFDM stream else BER will
 % flag an error
 out_aligned=out_aligned(1:length(ofdmStream_trainBlock));
+%out_aligned=fftfilt(wgn(1,512,10), ofdmStream_trainBlock);
 [rxOfdmStream,h_freq_estimated]=ofdm_demod(out_aligned,N,L,P,dummy_elements,length(trainblock),ones(N,1),on_off_vector,trainMode,trainblock);
 rxBitStream = qam_demod(rxOfdmStream,qam_order);
 berTransmission = ber(random_bit_vector,rxBitStream);

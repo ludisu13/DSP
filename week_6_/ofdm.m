@@ -38,7 +38,7 @@ qam_stream=[qam_stream ; zeros(symbols_frame*zero_frames_to_append,1)];
 j=1;
 number_of_data_packets=length(qam_stream)/symbols_frame/Ld;
 qam_buffer_2=reshape(qam_stream,symbols_frame,length(qam_stream)/symbols_frame);
-while j<=number_of_data_packets
+while j<=(number_of_frames-1)
 training_part=repmat(training_seq,Lt,1);
 data_part=[];
      for i=1:(Ld)
@@ -47,6 +47,7 @@ data_part=[];
 qam_buffer=[training_part ; data_part];
 j=Ld+j;
 end
+
 
 
 qam_stream=qam_buffer;

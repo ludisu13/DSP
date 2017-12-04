@@ -1,4 +1,4 @@
-function [ofdm_frames_modulated_serial,P,zeros_required]=ofdm(qam_stream,N,L,on_off_vector,trainMode)
+function [ofdm_frames_modulated_serial,P,zeros_required]=ofdm(qam_stream,N,L,on_off_vector,trainMode,training_seq,Lt,Ld)
 
 %------------------------------------------------------------------------%
 %commenting the following parts out as the following values are going to
@@ -6,7 +6,7 @@ function [ofdm_frames_modulated_serial,P,zeros_required]=ofdm(qam_stream,N,L,on_
 
 %N=1024;
 %L=100; %length of the cyclic prefix
-
+symbols_frame=((N/2)-1); %this is the number of QAM symbols that can be present in a frame
 %------------------------------------------------------------------------%
 
 %if QAM stream is a row vector, convert that into a column vector
@@ -21,8 +21,8 @@ if (trainMode=='Y')||(trainMode=='y')
     %qam_stream
     qam_stream_buffer=qam_stream;
     qam_stream=repmat(qam_stream_buffer,100,1);
+    
 end
-
 
 %before proceeding with anything else, lets process the vector with
 %adaptive on-off loading.
@@ -51,7 +51,7 @@ qam_stream=qam_stream_buffer;
 
 
 
-symbols_frame=((N/2)-1); %this is the number of QAM symbols that can be present in a frame
+
 
 
 %The following code checks whether the function has been called with a

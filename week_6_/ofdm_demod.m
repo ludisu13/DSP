@@ -1,6 +1,6 @@
 %ofdm_demod.m
 %this script demodulates OFDM serial data
-function [recovered_qam_stream,h_channel_freq]=ofdm_demod(ofdm_frames_modulated_serial,N,L,P,dummy_elements,data_size,h_channel_freq,on_off_vector,trainMode,trainblock)
+function [recovered_qam_stream,h_channel_freq]=ofdm_demod(ofdm_frames_modulated_serial,N,L,P,dummy_elements,data_size,h_channel_freq,on_off_vector,trainMode,trainblock,Lt,Ld)
 
 %N : Number of sub-carriers
 %L : The length of the FIR model of the channel
@@ -35,9 +35,10 @@ recovered_qam_stream=zeros(data_size+dummy_elements,1);
 
 % Estimating the channel response using least squares fitting approach
 K=(N/2)-1;
-h_estimated=zeros((N/2)-1,1);
+
 %square_sum=
 if (trainMode=='y')
+    h_estimated=zeros((N/2)-1,1);
     disp('Demodulator in train mode');
     for j=2:K+1
         ofdm_frame_same_frequency=ofdm_frames_demodulated(j,:);
@@ -51,10 +52,29 @@ if (trainMode=='y')
     h_channel_freq((N/2)+1)=1e-8; %asign some value to the Nyquist component of the channel response
     h_channel_freq(2:N/2)=h_estimated;
     h_channel_freq(N/2+2:N)=flipud(conj(h_estimated));
+else
+i=1;
+size_demod=size(ofdm_frames_demodulated);
+h_estimated_b=zeros((N/2)-1,1);
+h_channel_freq=[];
+
+
+
+
+
+while i<=size_demod(2);
+    for j= 2:K+1
+        ofdm_frame_same_frequency=ofdm_frames_demodulated(j,[i:Lt+i-1]);
+        h_estimated_b(j-1)=trainblock(j-1)*ones(Lt,1)\ofdm_frame_same_frequency.';       
+    end
+    h_estimated_packet=[1e-8;h_estimated_b;1e-8;flipud(conj(h_estimated_b))];
+    h_channel_freq=[h_channel_freq h_estimated_packet];
+    i=i+Lt+Ld;
 end
 
-    
-    
+end
+
+
 for j=1:P
     ofdm_frames_demodulated(:,j)=ofdm_frames_demodulated(:,j)./(h_channel_freq); %this removes the channel noise
     data_frame=ofdm_frames_demodulated(2:N/2,j);

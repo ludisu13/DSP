@@ -6,13 +6,10 @@ lagdiff=lag(index);
 disp(lagdiff);
 % once we know the lag, we can just throw away the first lagdiff number of
 % samples
-out_clipped=out(lagdiff-20:end); %20 is the margin required as per the assignemnt sheet
-% Then the components due to the silence at the beginning, the pulse and
-% the (L-1) samples of zero can be thrown away. 
-silence_beginning_samples=(2*fs);
+out_clipped=out(lagdiff:end);
 pulse_duration=0.5; % Make sure this is the same in the modified initparams.m
 samples_pulse=(pulse_duration*fs);
 % Total number of samples to be thrown awa
-out_aligned=out_clipped(silence_beginning_samples+samples_pulse+511:end);
+out_aligned=out_clipped(samples_pulse+512-40:end);
 end
 
