@@ -11,9 +11,7 @@ silence_trailing_pulse=zeros(L,1); %the reason why L-1 samples are chosen to hav
 % length of the channel's FIR response) is because the pulse's last sample is also a zero! 
 nbsecs=silence_beginning+silence_end+(length(toplay)/fs)+pulse_duration+((L-1)/fs);
 %scale the value of toplay to be within +/-1
-if max(abs(toplay))>1
-    toplay=toplay/max(abs(toplay));
-end
+toplay=toplay/max(abs(toplay));
 simin=[zeros(silence_beginning*fs,1);pulse;silence_trailing_pulse;toplay;zeros(silence_end*fs,1)];
 simin=[simin,simin];
 end

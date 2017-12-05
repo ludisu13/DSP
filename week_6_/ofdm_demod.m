@@ -52,6 +52,16 @@ if (trainMode=='y')
     h_channel_freq((N/2)+1)=1e-8; %asign some value to the Nyquist component of the channel response
     h_channel_freq(2:N/2)=h_estimated;
     h_channel_freq(N/2+2:N)=flipud(conj(h_estimated));
+    
+for j=1:P
+    ofdm_frames_demodulated(:,j)=ofdm_frames_demodulated(:,j)./(h_channel_freq); %this removes the channel noise
+    data_frame=ofdm_frames_demodulated(2:N/2,j);
+    %from the data frame, throw away the first L elements and take the next
+    %L elements
+    actual_data=data_frame;
+    recovered_qam_stream((j-1)*K+1:j*K)=actual_data;
+end
+%throw away the last dummy_elements as the original qam stream was obtained
 else
 i=1;
 size_demod=size(ofdm_frames_demodulated);
@@ -71,19 +81,23 @@ while i<=size_demod(2);
     h_channel_freq=[h_channel_freq h_estimated_packet];
     i=i+Lt+Ld;
 end
-
-end
-
+channel_estimation_index=1;
+data_recovered=[];
 
 for j=1:P
-    ofdm_frames_demodulated(:,j)=ofdm_frames_demodulated(:,j)./(h_channel_freq); %this removes the channel noise
-    data_frame=ofdm_frames_demodulated(2:N/2,j);
-    %from the data frame, throw away the first L elements and take the next
-    %L elements
-    actual_data=data_frame;
-    recovered_qam_stream((j-1)*K+1:j*K)=actual_data;
+    ofdm_frames_demodulated(:,j)=ofdm_frames_demodulated(:,j)./(h_channel_freq(:,channel_estimation_index));
+    if(rem(j,Lt+Ld)==0)
+       channel_estimation_index=channel_estimation_index+1; 
+       data_recovered=[data_recovered ofdm_frames_demodulated(2:N/2,j-Ld+1:j)];
+    end
 end
-%throw away the last dummy_elements as the original qam stream was obtained
+
+size_qam_vector=size(data_recovered);
+recovered_qam_stream=reshape(data_recovered,size_qam_vector(1)*size_qam_vector(2),1);
+
+end
+
+
 recovered_qam_stream=recovered_qam_stream(1:end-dummy_elements);
 
 

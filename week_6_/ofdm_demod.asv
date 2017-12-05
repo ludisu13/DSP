@@ -1,6 +1,6 @@
 %ofdm_demod.m
 %this script demodulates OFDM serial data
-function [recovered_qam_stream,h_channel_freq]=ofdm_demod(ofdm_frames_modulated_serial,N,L,P,dummy_elements,data_size,h_channel_freq,on_off_vector,trainMode,trainblock)
+function [recovered_qam_stream,h_channel_freq]=ofdm_demod(ofdm_frames_modulated_serial,N,L,P,dummy_elements,data_size,h_channel_freq,on_off_vector,trainMode,trainblock,Lt,Ld)
 
 %N : Number of sub-carriers
 %L : The length of the FIR model of the channel
@@ -35,25 +35,23 @@ recovered_qam_stream=zeros(data_size+dummy_elements,1);
 
 % Estimating the channel response using least squares fitting approach
 K=(N/2)-1;
-h_estimated=zeros((N/2)-1,1);
-square_sum=
+
+%square_sum=
 if (trainMode=='y')
+    h_estimated=zeros((N/2)-1,1);
     disp('Demodulator in train mode');
     for j=2:K+1
         ofdm_frame_same_frequency=ofdm_frames_demodulated(j,:);
         %I know the expected symbol because the same symbol is transmited in
         %the same fame. It is present in the vector trainblock.
-        %h_estimated(j-1)=trainblock(j-1)*ones(1,100)\ofdm_frame_same_frequency;
-        h_estimated(j-1)=trainblock(j-1)*sum(ofdm_frame_same_frequency)/
+        h_estimated(j-1)=trainblock(j-1)*ones(100,1)\ofdm_frame_same_frequency.';
+        %h_estimated(j-1)=trainblock(j-1)*sum(ofdm_frame_same_frequency)/
     end
     h_channel_freq=ones(N,1);
     h_channel_freq(1)=1e-8; %assign some value to the DC component of the channel response.
     h_channel_freq((N/2)+1)=1e-8; %asign some value to the Nyquist component of the channel response
     h_channel_freq(2:N/2)=h_estimated;
     h_channel_freq(N/2+2:N)=flipud(conj(h_estimated));
-end
-
-    
     
 for j=1:P
     ofdm_frames_demodulated(:,j)=ofdm_frames_demodulated(:,j)./(h_channel_freq); %this removes the channel noise
@@ -64,6 +62,40 @@ for j=1:P
     recovered_qam_stream((j-1)*K+1:j*K)=actual_data;
 end
 %throw away the last dummy_elements as the original qam stream was obtained
+else
+i=1;
+size_demod=size(ofdm_frames_demodulated);
+h_estimated_b=zeros((N/2)-1,1);
+h_channel_freq=[];
+
+
+
+
+
+while i<=size_demod(2);
+    for j= 2:K+1
+        ofdm_frame_same_frequency=ofdm_frames_demodulated(j,[i:Lt+i-1]);
+        h_estimated_b(j-1)=trainblock(j-1)*ones(Lt,1)\ofdm_frame_same_frequency.';       
+    end
+    h_estimated_packet=[1e-8;h_estimated_b;1e-8;flipud(conj(h_estimated_b))];
+    h_channel_freq=[h_channel_freq h_estimated_packet];
+    i=i+Lt+Ld;
+end
+channel_estimation_index=1;
+data_recovered=[];
+for j=1:P
+    ofdm_frames_demodulated(:,j)=ofdm_frames_demodulated(:,j)./(h_channel_freq(:,channel_estimation_index));
+    if(rem(j,Lt+Ld)==0)
+       channel_estimation_index=channel_estimation_index+1; 
+       data_recovered=[data recovered ofdm_frames_demodulated(2:N/2,j-Ld+1:j)];
+    end
+end
+size_qam_vector=size(data_recovered);
+recovered_qam_stream=reshape(data_recovered,size_qam_vector(1)*size_qam_vector(2),1);
+
+end
+
+
 recovered_qam_stream=recovered_qam_stream(1:end-dummy_elements);
 
 

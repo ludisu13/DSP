@@ -28,7 +28,7 @@ qam_buffer=[];
 zeros_to_append=(ceil(length(qam_stream)/symbols_frame))*symbols_frame-length(qam_stream);
 %if(rem(length(qam_stream),symbols_frame)~=0)
     
-    qam_stream=[qam stream ; zeros(zeros_to_append,1) ];
+    qam_stream=[qam_stream ; zeros(zeros_to_append,1) ];
     
 %end
 
@@ -36,15 +36,15 @@ number_of_frames=length(qam_stream)/symbols_frame;
 zero_frames_to_append=(ceil(number_of_frames/Ld)*Ld)-number_of_frames;
 qam_stream=[qam_stream ; zeros(symbols_frame*zero_frames_to_append,1)];
 j=1;
-number_of_data_packets=length(qam_stream)/symbols_frame/Ld;
+%number_of_data_packets=length(qam_stream)/symbols_frame/Ld;
 qam_buffer_2=reshape(qam_stream,symbols_frame,length(qam_stream)/symbols_frame);
-while j<=(number_of_frames-1)
+while j<=(number_of_frames)
 training_part=repmat(training_seq,Lt,1);
 data_part=[];
      for i=1:(Ld)
          data_part=[data_part ; qam_buffer_2(:,(j-1)+i)];
      end
-qam_buffer=[training_part ; data_part];
+qam_buffer=[qam_buffer;training_part ; data_part];
 j=Ld+j;
 end
 
