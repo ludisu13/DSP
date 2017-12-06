@@ -1,4 +1,4 @@
-function [ofdm_frames_modulated_serial,P,zeros_required]=ofdm(qam_stream,N,L,on_off_vector,trainMode,training_seq,Lt,Ld)
+function [ofdm_frames_modulated_serial,P,zeros_required]=ofdm(qam_stream,N,L,on_off_vector,trainMode,trainrep,training_seq,Lt,Ld)
 
 %------------------------------------------------------------------------%
 %commenting the following parts out as the following values are going to
@@ -20,9 +20,28 @@ if (trainMode=='Y')||(trainMode=='y')
     %characters. It needs to be replicated 100 times and put into
     %qam_stream
     qam_stream_buffer=qam_stream;
-    qam_stream=repmat(qam_stream_buffer,100,1);
+    qam_stream=repmat(qam_stream_buffer,trainrep,1);
     
+else
+
+data_index=1;
+frequency_index=1;
+qam_stream_buffer=[];
+while (data_index<=length(qam_stream))
+    if (on_off_vector(frequency_index)==1)
+        %not a great way to do it, but I am too left wing to care
+        qam_stream_buffer=[qam_stream_buffer;qam_stream(data_index)];
+        data_index=data_index+1;
+    else
+        qam_stream_buffer=[qam_stream_buffer;0];
+        %disp('I am here');
+    end
+    frequency_index=frequency_index+1;
+    if (frequency_index==N/2)
+        frequency_index=1;
+    end
 end
+qam_stream=qam_stream_buffer;
 data_part=[];
 qam_buffer=[];
 zeros_to_append=(ceil(length(qam_stream)/symbols_frame))*symbols_frame-length(qam_stream);
@@ -47,32 +66,10 @@ data_part=[];
 qam_buffer=[qam_buffer;training_part ; data_part];
 j=Ld+j;
 end
-
-
-
 qam_stream=qam_buffer;
 %before proceeding with anything else, lets process the vector with
 %adaptive on-off loading.
-
-data_index=1;
-frequency_index=1;
-qam_stream_buffer=[];
-while (data_index<=length(qam_stream))
-    if (on_off_vector(frequency_index)==1)
-        %not a great way to do it, but I am too left wing to care
-        qam_stream_buffer=[qam_stream_buffer;qam_stream(data_index)];
-        data_index=data_index+1;
-    else
-        qam_stream_buffer=[qam_stream_buffer;0];
-        %disp('I am here');
-    end
-    frequency_index=frequency_index+1;
-    if (frequency_index==N/2)
-        frequency_index=1;
-    end
 end
-qam_stream=qam_stream_buffer;
-
 
     
 
